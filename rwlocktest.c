@@ -388,10 +388,10 @@ rwlock_worker(void * const ptr)
 test_rwlocks(void)
 {
   const u64 ncpus = process_affinity_core_count();
-  for (u64 p = 6; p <= 9; p+=3) {
+  for (u64 p = 5; p <= 9; p+=2) {
     const u64 nlocks = 1lu << p;
     struct rwlock_worker_info info;
-    info.locks = (typeof(info.locks))malloc(sizeof(info.locks[0]) * nlocks);
+    info.locks = malloc(sizeof(info.locks[0]) * nlocks);
     info.id_mask = nlocks - 1;;
     info.seq = 0;
     info.nr_writer = 0;
@@ -408,7 +408,8 @@ test_rwlocks(void)
       const double mw = ((double)nr_w) * 0.000001 / dt;
       const u64 nr_r = atomic_load(&info.nr_r);
       const double mr = ((double)nr_r) * 0.000001 / dt;
-      printf("%lu NTH %3lu NW %3lu NL %3lu R %6.2lf W %6.2lf\n", 0lu, i, 0lu, nlocks, mr, mw);
+      (void)mw; // ignored
+      printf("#threads: %3lu   #locks: %3lu   throughput: %6.2lf million ops/sec\n", i, nlocks, mr);
     }
     free(info.locks);
   }
