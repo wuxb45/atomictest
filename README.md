@@ -189,3 +189,9 @@ rwlock_trylock_read():
     284e: f0 83 2c f0 03        lock subl $0x3,(%rax,%rsi,8)
 ```
 
+# Archlinux clang archive packages
+
+    https://archive.archlinux.org/packages/c/compiler-rt/
+    https://archive.archlinux.org/packages/l/llvm/
+    https://archive.archlinux.org/packages/l/llvm-libs/
+    https://archive.archlinux.org/packages/c/clang/
