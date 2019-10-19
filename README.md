@@ -1,25 +1,25 @@
-# short desc.
-
-Change the compiler with CC=x such as `CC=clang-9`. The default is `clang`.
+# Problem statement
 
 The relevant part is the use of `atomic_fetch_add` and `atomic_fetch_sub` in `rwlock_*` functions.
 In short, clang-8 and earlier versions generate `lock addl` and `lock subl` for those atomics.
 clang-9 generates `lock incl` and `lock decl`, and also `lock xadd` if adding 2 or other numbers.
 The results show that `lock addl` and `lock subl` can be more efficient in some cases.
 The rwlock implementation can be wrong. Any suggestions are welcome.
-I have not comfirmed the actual cause.
+I have not identified the actual cause.
 Right now I just personally hope to get the old compilation results with clang-9.
 
 In this microbenchmark each thread repeatedly acquires and releases a randomly selected lock from a set.
 The number of threads and the number of locks are changed in the benchmark.
-Each thread is pinned to a uniq core assuming #threads <= #cores.
-The program uses the process' affinity settings to determine the maximum # of cores to use.
+Each thread is pinned to a unique core, assuming #threads <= #cores.
+The program reads the process' affinity settings to determine how many cores can be used.
 
+Change the compiler with CC=x such as `CC=clang-9`. The default is `clang`.
 If having multiple sockets, use `numactl -N 0 ./rwlocktest.out` to let it run on one socket.
 
 # Results
 Tested on both Broadwell (16-core) and Skylake (14-core) servers, with Archlinux (kernel 5.3.x) and Ubuntu 18.04, respectively.
-Broadwell has HT turned off. Skylake has HT turned on (not on purpose) so I used the first 14 cores out of the 28 on a socket.
+
+Broadwell has HT turned off. Skylake has HT turned on (not on purpose) so I used the first 14 cores out of the 28 on a socket.  Skylake results are omitted (similar to Broadwell's).
 
 Results on Broadwell are listed below.
 Server specs: Archlinux, linux 5.3.6, Xeon E5-2697A v4, mitigations=off.
@@ -29,7 +29,7 @@ However, with a \_mm\_pause() added in between the lock() and unlock(), the peak
 But the throughput under high-contention (32 locks) is much lower (roughly 40 vs 60).
 I have not exhausted all the possibilities by adding `pause`s, reordering the statements,
 and writing inline assembly to force doing `lock addl` with clang-9.
-Some are slightly better, but none has produced results comparable to clang-8's.
+Some are slightly better, but none has produced results as good as clang-8's.
 
 ## results with clang 8/9 (formatted for comparison)
 
@@ -173,7 +173,8 @@ rwlock_trylock_read():
     2846: f0 ff 0c f0           lock decl (%rax,%rsi,8)
 ```
 
-## clang-9, but with `atomic_fetch_add(pvar, 3)` (benchmarking results omitted, not better)
+## clang-9, but with `atomic_fetch_add(pvar, 3)`
+(benchmarking results omitted, not improved)
 
 ```
 rwlock_trylock_read():
